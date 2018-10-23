@@ -24,5 +24,20 @@ namespace Gomoku
         {
             InitializeComponent();
         }
+
+        private void gameBoard_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            var gameBoardPoint = Utilities.getGameBoardXFromMousePosition(Mouse.GetPosition(gameBoard));
+            if (HyperParam.turn)
+            {
+                draw.circle(gameBoardPoint.Item1, gameBoardPoint.Item2, 2 * HyperParam.circleRadius, 2 * HyperParam.circleRadius, gameBoard);
+                HyperParam.turn = false;
+            }
+            else
+            {
+                draw.x(gameBoardPoint.Item1, gameBoardPoint.Item2, gameBoard);
+                HyperParam.turn = true;
+            }
+        }
     }
 }
