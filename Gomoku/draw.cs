@@ -9,13 +9,14 @@ using System.Windows.Shapes;
 
 namespace Gomoku
 {
-    class draw
+    class Draw
     {
-        public static void circle(int x, int y, int width, int height, Canvas cv)
+        public static void DrawO(int x, int y, int width, int height, Canvas cv)
         {
 
             Ellipse circle = new Ellipse()
             {
+                
                 Width = width,
                 Height = height,
                 Stroke = Brushes.Red,
@@ -28,7 +29,7 @@ namespace Gomoku
             circle.SetValue(Canvas.TopProperty, (double)y - HyperParam.circleRadius);
         }
 
-        public static void x(int x, int y, Canvas cv)
+        public static void DrawX(int x, int y, Canvas cv)
         {
 
             var line1 = new Line()
@@ -53,11 +54,6 @@ namespace Gomoku
 
             cv.Children.Add(line1);
             cv.Children.Add(line2);
-
-            //line1.SetValue(Canvas.LeftProperty, (double)x - HyperParam.circleRadius);
-            //line1.SetValue(Canvas.TopProperty, (double)y - HyperParam.circleRadius);
-            //line2.SetValue(Canvas.LeftProperty, (double)x - HyperParam.circleRadius);
-            //line2.SetValue(Canvas.TopProperty, (double)y + HyperParam.circleRadius);
         }
     }
 }

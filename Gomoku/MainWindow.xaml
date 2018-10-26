@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:Gomoku"
         mc:Ignorable="d"
         Title="MainWindow" Height="743.79" Width="936.146">
-    <Canvas x:Name="gameBoard" Width="600" Height="600" MouseLeftButtonUp="gameBoard_MouseLeftButtonUp">
+    <Canvas x:Name="gameBoard" Width="600" Height="600" MouseLeftButtonUp="GameBoard_MouseLeftButtonUp">
         <Canvas.Background>
             <DrawingBrush x:Name="cellBoard" TileMode="Tile" Viewport="0,0,30,30" 
                                      ViewportUnits="Absolute">
