@@ -8,6 +8,9 @@ namespace Gomoku
     /// </summary>
     class Player
     {
+        /// <summary>
+        /// holds the latest location that the player marked on the gameboard
+        /// </summary>
         public Tuple<int, int> LatestMarkLoc { get; set; }
 
         public Player()
@@ -33,6 +36,19 @@ namespace Gomoku
             LatestMarkLoc = new Tuple<int, int>(x, y);
             return true;
         }
-    }
 
+        /// <summary>
+        /// simple AI agent computes location for its next mark
+        /// </summary>
+        /// <param name="gameBoard">the diction represents the gameboard</param>
+        /// <param name="oponentLatestMark">location of last oponent's mark</param>
+        /// <param name="oponentMarkSymbol">oponent symbol (1 or 2) as the dictionary contains only 
+        /// 0 (non-marked location), 1, or 2
+        /// </param>
+        /// <returns></returns>
+        public Tuple<int, int> SimpleAIReasoning(Dictionary<int, int> gameBoard, Tuple<int, int> oponentLatestMark, int oponentMarkSymbol)
+        {
+            return null;
+        }
+    }
 }
