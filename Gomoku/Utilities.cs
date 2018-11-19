@@ -37,5 +37,10 @@ namespace Gomoku
                 Application.Current.Shutdown();
             }
         }
+
+        public static int CoordinateToInteger(int x, int y)
+        {
+            return y * HyperParam.boardSide + x;
+        }
     }
 }
