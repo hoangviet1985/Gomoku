@@ -44,8 +44,9 @@ namespace Gomoku
         /// the UI canvas for the AI to mark on
         /// </summary>
         private Canvas graphicalBoard;
+        private Canvas currentPlayerCv;
 
-        public Game(int gameMode, Canvas graphicalBoard)
+        public Game(int gameMode, Canvas graphicalBoard, Canvas currentPlayerCv)
         {
             gameBoard = new Dictionary<int, int>();
             GameMode = gameMode;
@@ -56,6 +57,7 @@ namespace Gomoku
             players[1] = new Player();
             ActivePlayerID = (int)HyperParam.PlayerID.Player1;
             this.graphicalBoard = graphicalBoard;
+            this.currentPlayerCv = currentPlayerCv;
             if(GameMode == 1 || GameMode == 2)
             {
                 RunGameMode12();
@@ -156,6 +158,11 @@ namespace Gomoku
                     2 * HyperParam.circleRadius,
                     2 * HyperParam.circleRadius,
                     graphicalBoard);
+
+                    currentPlayerCv.Children.Clear();
+                    Draw.DrawX((int)currentPlayerCv.Width / 2,
+                    (int)currentPlayerCv.Height / 2,
+                    currentPlayerCv);
                 });
                 CheckGameEnd();
                 ActivePlayerID = (int)HyperParam.PlayerID.Player2;
@@ -186,6 +193,13 @@ namespace Gomoku
                     Draw.DrawX(nextMark.Item1 * HyperParam.cellSide,
                     nextMark.Item2 * HyperParam.cellSide,
                     graphicalBoard);
+
+                    currentPlayerCv.Children.Clear();
+                    Draw.DrawO((int)currentPlayerCv.Width / 2,
+                    (int)currentPlayerCv.Height / 2,
+                    2 * HyperParam.circleRadius,
+                    2 * HyperParam.circleRadius,
+                    currentPlayerCv);
                 });
                 CheckGameEnd();
                 ActivePlayerID = (int)HyperParam.PlayerID.Player1;

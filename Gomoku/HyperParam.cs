@@ -26,5 +26,7 @@
         /// used to save to the dictionary representing inner state of gameboard
         /// </summary>
         public enum MarkSymbol { Player1 = 1, Player2};
+
+        public static int reasoningDepth = 5;
     }
 }

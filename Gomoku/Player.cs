@@ -73,6 +73,17 @@ namespace Gomoku
             return true;
         }
 
+        /// <summary>
+        /// An AI player marks on the game board
+        /// </summary>
+        /// <param name="gameBoard">the dictionary represents the gameboard</param>
+        /// <param name="x">x coordinate of the mark</param>
+        /// <param name="y">x coordinate of the mark</param>
+        /// <param name="markSymbol">mark symbol of the player (1 or 2)</param>
+        /// <param name="gameBoardMinX">minimum x coordinate of existing marks</param>
+        /// <param name="gameBoardMinY">minimum y coordinate of existing marks</param>
+        /// <param name="gameBoardMaxX">maximum x coordinate of existing marks</param>
+        /// <param name="gameBoardMaxY">maximum y coordinate of existing marks</param>
         public void AIMarksOnGameBoard(
             Dictionary<int, int> gameBoard, 
             int x, 
@@ -102,6 +113,8 @@ namespace Gomoku
                 gameBoardMaxY = y;
             }
         }
+
+        #region simple AI reasoning
 
         /// <summary>
         /// simple AI agent computes location for its next mark
@@ -676,7 +689,7 @@ namespace Gomoku
                     if(!gameBoard.ContainsKey(Utilities.CoordinateToInteger(j, i)))
                     {
                         int currentScore = ComputeScoreForOneMark(gameBoard, j, i, myMarkSymbol, opponentMarkSymbol) ;
-                        if (maxScore <= currentScore)
+                        if (maxScore < currentScore)
                         {
                             maxScore = currentScore;
                             nextMark = new Tuple<int, int>(j, i);
@@ -769,19 +782,19 @@ namespace Gomoku
             score += ComputeScoreForOneLineFromAMark(tempArr, markLocationY - minY, myMarkSymbol, opponentMarkSymbol);
 
             //diagonal line #1
-            offset = 1;
+            offset = 0;
             while (markLocationX - offset >= 0 &&
                 markLocationY - offset >= 0 &&
-                offset <= 6)
+                offset <= 5)
             {
                 offset += 1;
             }
             minX = markLocationX - offset + 1;
             minY = markLocationY - offset + 1;
-            offset = 1;
+            offset = 0;
             while (markLocationX + offset <= HyperParam.boardSide &&
                 markLocationY + offset <= HyperParam.boardSide &&
-                offset <= 6)
+                offset <= 5)
             {
                 offset += 1;
             }
@@ -807,19 +820,19 @@ namespace Gomoku
             score += ComputeScoreForOneLineFromAMark(tempArr, markLocationX - minX, myMarkSymbol, opponentMarkSymbol);
 
             //diagonal line #2
-            offset = 1;
+            offset = 0;
             while (markLocationX + offset <= HyperParam.boardSide &&
                 markLocationY - offset >= 0 &&
-                offset <= 6)
+                offset <= 5)
             {
                 offset += 1;
             }
             maxX = markLocationX + offset - 1;
             minY = markLocationY - offset + 1;
-            offset = 1;
+            offset = 0;
             while (markLocationX - offset >= 0 &&
                 markLocationY + offset <= HyperParam.boardSide &&
-                offset <= 6)
+                offset <= 5)
             {
                 offset += 1;
             }
@@ -868,12 +881,12 @@ namespace Gomoku
             line[markLocOnLine] = myMarkSymbol;
             for(int i = 0; i < line.Length; ++i)
             {
-                if(line[i] == opponentMarkSymbol)
+                if(line[i] == opponentMarkSymbol || i == line.Length - 1)
                 {
                     if(countToSee5 >= 5)
                     {
-                        score += countMarks;
-                        score += countToSee5 - 5;
+                        score += countMarks * countMarks * countMarks * countMarks;
+                        //score += countToSee5 - 5;
                     }
                     countMarks = 0;
                     countToSee5 = 0;
@@ -892,11 +905,11 @@ namespace Gomoku
             line[markLocOnLine] = opponentMarkSymbol;
             for (int i = 0; i < line.Length; ++i)
             {
-                if (line[i] == myMarkSymbol)
+                if (line[i] == myMarkSymbol || i == line.Length - 1)
                 {
                     if (countToSee5 >= 5)
                     {
-                        score += countMarks;
+                        score += countMarks * countMarks * countMarks * countMarks;
                         score += countToSee5 - 5;
                     }
                     countMarks = 0;
@@ -914,5 +927,71 @@ namespace Gomoku
 
             return score;
         }
+
+        #endregion
+
+        #region complex AI resoning
+
+        public Tuple<int, int> ComplexAIReasoning(
+            Dictionary<int, int> gameBoard,
+            Tuple<int, int> opponentLatestMark,
+            int myMarkSymbol,
+            int opponentMarkSymbol,
+            int gameBoardMinX,
+            int gameBoardMinY,
+            int gameBoardMaxX,
+            int gameBoardMaxY,
+            int depth)
+        {
+            if (gameBoard.Count == 0)
+            {
+                return new Tuple<int, int>(HyperParam.boardSide / 2, HyperParam.boardSide / 2);
+            }
+
+            Tuple<int, int> nextMark = CheckInstantWin(gameBoard, LatestMarkLoc, myMarkSymbol);
+            if (nextMark != null)
+            {
+                return nextMark;
+            }
+
+            nextMark = CheckInstantWin(gameBoard, opponentLatestMark, opponentMarkSymbol);
+            if (nextMark != null)
+            {
+                return nextMark;
+            }
+
+            nextMark = CheckSemiInstantWin(gameBoard, LatestMarkLoc, myMarkSymbol);
+            if (nextMark != null)
+            {
+                return nextMark;
+            }
+
+            nextMark = CheckSemiInstantWin(gameBoard, opponentLatestMark, opponentMarkSymbol);
+            if (nextMark != null)
+            {
+                return nextMark;
+            }
+
+            nextMark = PrunningAttack(
+                gameBoard,
+                myMarkSymbol,
+                opponentMarkSymbol,
+                gameBoardMinX,
+                gameBoardMinY,
+                gameBoardMaxX,
+                gameBoardMaxY,
+                depth);
+
+            return nextMark;
+        }
+
+        private Tuple<int, int> PrunningAttack(Dictionary<int, int> gameBoard, int myMarkSymbol, int opponentMarkSymbol, int gameBoardMinX, int gameBoardMinY, int gameBoardMaxX, int gameBoardMaxY, int depth)
+        {
+            throw new NotImplementedException();
+        }
+
+
+
+        #endregion
     }
 }

@@ -22,5 +22,11 @@
                 </DrawingBrush.Drawing>
             </DrawingBrush>
         </Canvas.Background>
+        <GroupBox Header="Game mode" Height="64" Canvas.Left="588" Canvas.Top="-6" Width="143">
+            <Label x:Name="gameModeLb" Content="Person vs Person" HorizontalAlignment="Left" Height="30" Margin="-6,8,0,0" VerticalAlignment="Top" Width="133"/>
+        </GroupBox>
+        <GroupBox Header="Current turn" Height="64" Canvas.Left="588" Canvas.Top="63" Width="143">
+            <Canvas x:Name="currentPlayerCv" HorizontalAlignment="Left" Height="33" Margin="8,5,0,0" VerticalAlignment="Top" Width="34"/>
+        </GroupBox>
     </Canvas>
 </Window>
