@@ -51,7 +51,7 @@ namespace Gomoku
                 var playerActResult = game.HumanActing((gameBoardPoint.Item1 + 1) / HyperParam.cellSide, (gameBoardPoint.Item2 + 1) / HyperParam.cellSide);
                 if (playerActResult)
                 {
-                    if (game.ActivePlayerID == (int)HyperParam.PlayerID.Player2)
+                    if (game.activePlayerID == (int)HyperParam.PlayerID.Player2)
                     {
                         Draw.DrawO(gameBoardPoint.Item1, gameBoardPoint.Item2, 2 * HyperParam.circleRadius, 2 * HyperParam.circleRadius, gameBoard);
                         currentPlayerCv.Children.Clear();
@@ -71,7 +71,7 @@ namespace Gomoku
                     }
                 }
             }
-            else if(game.GameMode == 1 && game.ActivePlayerID == (int)HyperParam.PlayerID.Player1)
+            else if(game.GameMode == 1 && game.activePlayerID == (int)HyperParam.PlayerID.Player1)
             {
                 var gameBoardPoint = Utilities.GetGameBoardLocationInPixelsFromMousePosition(Mouse.GetPosition(gameBoard));
                 var playerActResult = game.HumanActing((gameBoardPoint.Item1 + 1) / HyperParam.cellSide, (gameBoardPoint.Item2 + 1) / HyperParam.cellSide);

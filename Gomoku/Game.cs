@@ -38,7 +38,7 @@ namespace Gomoku
         /// <summary>
         /// ID of the active player (1 or 2) who is taking turn
         /// </summary>
-        public int ActivePlayerID { get; set; }
+        public int activePlayerID;
 
         /// <summary>
         /// the UI canvas for the AI to mark on
@@ -55,7 +55,7 @@ namespace Gomoku
             players = new Player[2];
             players[0] = new Player();
             players[1] = new Player();
-            ActivePlayerID = (int)HyperParam.PlayerID.Player1;
+            activePlayerID = (int)HyperParam.PlayerID.Player1;
             this.graphicalBoard = graphicalBoard;
             this.currentPlayerCv = currentPlayerCv;
             if(GameMode == 1 || GameMode == 2)
@@ -87,7 +87,7 @@ namespace Gomoku
         /// <returns>result of active player's action</returns>
         public bool HumanActing(int x, int y)
         {
-            if(ActivePlayerID == (int)HyperParam.PlayerID.Player1)
+            if(activePlayerID == (int)HyperParam.PlayerID.Player1)
             {
                 if(players[0].HumanMarksOnGameBoard(
                     gameBoard, 
@@ -100,11 +100,11 @@ namespace Gomoku
                     ref maxY))
                 {
                     CheckGameEnd();
-                    ActivePlayerID = (int)HyperParam.PlayerID.Player2;
+                    activePlayerID = (int)HyperParam.PlayerID.Player2;
                     return true;
                 }
             }
-            else if(ActivePlayerID == (int)HyperParam.PlayerID.Player2)
+            else if(activePlayerID == (int)HyperParam.PlayerID.Player2)
             {
                 if (players[1].HumanMarksOnGameBoard(
                     gameBoard, 
@@ -117,7 +117,7 @@ namespace Gomoku
                     ref maxY))
                 {
                     CheckGameEnd();
-                    ActivePlayerID = (int)HyperParam.PlayerID.Player1;
+                    activePlayerID = (int)HyperParam.PlayerID.Player1;
                     return true;
                 }
             }
@@ -130,18 +130,18 @@ namespace Gomoku
         /// </summary>
         public void AIActing()
         {
-            if (ActivePlayerID == (int)HyperParam.PlayerID.Player1 &&
+            if (activePlayerID == (int)HyperParam.PlayerID.Player1 &&
                 GameMode == 2)
             {
-                var nextMark = players[0].SimpleAIReasoning(
+                var nextMark = players[0].GreedySearchAIReasoning(
                     gameBoard, 
                     players[1].LatestMarkLoc, 
                     (int)HyperParam.MarkSymbol.Player1, 
                     (int)HyperParam.MarkSymbol.Player2,
-                    minX,
-                    minY,
-                    maxX,
-                    maxY);
+                    ref minX,
+                    ref minY,
+                    ref maxX,
+                    ref maxY);
                 players[0].AIMarksOnGameBoard(
                     gameBoard, 
                     nextMark.Item1,
@@ -165,44 +165,84 @@ namespace Gomoku
                     currentPlayerCv);
                 });
                 CheckGameEnd();
-                ActivePlayerID = (int)HyperParam.PlayerID.Player2;
+                activePlayerID = (int)HyperParam.PlayerID.Player2;
             }
-            else if (ActivePlayerID == (int)HyperParam.PlayerID.Player2 &&
+            else if (activePlayerID == (int)HyperParam.PlayerID.Player2 && 
                 (GameMode == 1 || GameMode == 2))
             {
-                var nextMark = players[1].SimpleAIReasoning(
-                    gameBoard,
-                    players[0].LatestMarkLoc,
-                    (int)HyperParam.MarkSymbol.Player2,
-                    (int)HyperParam.MarkSymbol.Player1,
-                    minX,
-                    minY,
-                    maxX,
-                    maxY);
-                players[1].AIMarksOnGameBoard(
-                    gameBoard, 
-                    nextMark.Item1, 
-                    nextMark.Item2, 
-                    (int)HyperParam.MarkSymbol.Player2,
-                    ref minX,
-                    ref minY,
-                    ref maxX,
-                    ref maxY);
-                graphicalBoard.Dispatcher.Invoke(() =>
+                if (GameMode == 1)
                 {
-                    Draw.DrawX(nextMark.Item1 * HyperParam.cellSide,
-                    nextMark.Item2 * HyperParam.cellSide,
-                    graphicalBoard);
+                    var nextMark = players[1].GreedySearchAIReasoning(
+                        gameBoard,
+                        players[0].LatestMarkLoc,
+                        (int)HyperParam.MarkSymbol.Player2,
+                        (int)HyperParam.MarkSymbol.Player1,
+                        ref minX,
+                        ref minY,
+                        ref maxX,
+                        ref maxY);
+                    players[1].AIMarksOnGameBoard(
+                        gameBoard,
+                        nextMark.Item1,
+                        nextMark.Item2,
+                        (int)HyperParam.MarkSymbol.Player2,
+                        ref minX,
+                        ref minY,
+                        ref maxX,
+                        ref maxY);
+                    graphicalBoard.Dispatcher.Invoke(() =>
+                    {
+                        Draw.DrawX(nextMark.Item1 * HyperParam.cellSide,
+                        nextMark.Item2 * HyperParam.cellSide,
+                        graphicalBoard);
 
-                    currentPlayerCv.Children.Clear();
-                    Draw.DrawO((int)currentPlayerCv.Width / 2,
-                    (int)currentPlayerCv.Height / 2,
-                    2 * HyperParam.circleRadius,
-                    2 * HyperParam.circleRadius,
-                    currentPlayerCv);
-                });
-                CheckGameEnd();
-                ActivePlayerID = (int)HyperParam.PlayerID.Player1;
+                        currentPlayerCv.Children.Clear();
+                        Draw.DrawO((int)currentPlayerCv.Width / 2,
+                        (int)currentPlayerCv.Height / 2,
+                        2 * HyperParam.circleRadius,
+                        2 * HyperParam.circleRadius,
+                        currentPlayerCv);
+                    });
+                    CheckGameEnd();
+                    activePlayerID = (int)HyperParam.PlayerID.Player1;
+                }
+                else // GameMode == 2
+                {
+                    var nextMark = players[1].ComplexAIReasoning(
+                        gameBoard,
+                        players[0].LatestMarkLoc,
+                        (int)HyperParam.MarkSymbol.Player2,
+                        (int)HyperParam.MarkSymbol.Player1,
+                        ref minX,
+                        ref minY,
+                        ref maxX,
+                        ref maxY,
+                        ref activePlayerID);
+                    players[1].AIMarksOnGameBoard(
+                        gameBoard,
+                        nextMark.Item1,
+                        nextMark.Item2,
+                        (int)HyperParam.MarkSymbol.Player2,
+                        ref minX,
+                        ref minY,
+                        ref maxX,
+                        ref maxY);
+                    graphicalBoard.Dispatcher.Invoke(() =>
+                    {
+                        Draw.DrawX(nextMark.Item1 * HyperParam.cellSide,
+                        nextMark.Item2 * HyperParam.cellSide,
+                        graphicalBoard);
+
+                        currentPlayerCv.Children.Clear();
+                        Draw.DrawO((int)currentPlayerCv.Width / 2,
+                        (int)currentPlayerCv.Height / 2,
+                        2 * HyperParam.circleRadius,
+                        2 * HyperParam.circleRadius,
+                        currentPlayerCv);
+                    });
+                    CheckGameEnd();
+                    activePlayerID = (int)HyperParam.PlayerID.Player1;
+                }
             }
         }
 
@@ -216,13 +256,13 @@ namespace Gomoku
             var maxSymbolLength = 1;
             for(int x = 1; x <= 4; ++x)
             {
-                var nextX = players[ActivePlayerID - 1].LatestMarkLoc.Item1 - x;
+                var nextX = players[activePlayerID - 1].LatestMarkLoc.Item1 - x;
                 if (nextX < 0)
                 {
                     break;
                 }
-                if(!gameBoard.ContainsKey(players[ActivePlayerID - 1].LatestMarkLoc.Item2 * HyperParam.boardSide + nextX) ||
-                    gameBoard[players[ActivePlayerID - 1].LatestMarkLoc.Item2 * HyperParam.boardSide + nextX] != ActivePlayerID)
+                if(!gameBoard.ContainsKey(players[activePlayerID - 1].LatestMarkLoc.Item2 * HyperParam.boardSide + nextX) ||
+                    gameBoard[players[activePlayerID - 1].LatestMarkLoc.Item2 * HyperParam.boardSide + nextX] != activePlayerID)
                 {
                     break;
                 }
@@ -230,25 +270,25 @@ namespace Gomoku
             }
             if (maxSymbolLength == 5)
             {
-                Utilities.EndGameMessage("Player " + ActivePlayerID + " won!");
+                Utilities.EndGameMessage("Player " + activePlayerID + " won!");
                 return true;
             }
             for (int x = 1; x <= 4; ++x)
             {
-                var nextX = players[ActivePlayerID - 1].LatestMarkLoc.Item1 + x;
+                var nextX = players[activePlayerID - 1].LatestMarkLoc.Item1 + x;
                 if (nextX > HyperParam.boardSide)
                 {
                     break;
                 }
-                if (!gameBoard.ContainsKey(players[ActivePlayerID - 1].LatestMarkLoc.Item2 * HyperParam.boardSide + nextX) ||
-                    gameBoard[players[ActivePlayerID - 1].LatestMarkLoc.Item2 * HyperParam.boardSide + nextX] != ActivePlayerID)
+                if (!gameBoard.ContainsKey(players[activePlayerID - 1].LatestMarkLoc.Item2 * HyperParam.boardSide + nextX) ||
+                    gameBoard[players[activePlayerID - 1].LatestMarkLoc.Item2 * HyperParam.boardSide + nextX] != activePlayerID)
                 {
                     break;
                 }
                 maxSymbolLength += 1;
                 if (maxSymbolLength == 5)
                 {
-                    Utilities.EndGameMessage("Player " + ActivePlayerID + " won!");
+                    Utilities.EndGameMessage("Player " + activePlayerID + " won!");
                     return true;
                 }
             }
@@ -257,13 +297,13 @@ namespace Gomoku
             maxSymbolLength = 1;
             for (int y = 1; y <= 4; ++y)
             {
-                var nextY = players[ActivePlayerID - 1].LatestMarkLoc.Item2 - y;
+                var nextY = players[activePlayerID - 1].LatestMarkLoc.Item2 - y;
                 if (nextY > HyperParam.boardSide)
                 {
                     break;
                 }
-                if (!gameBoard.ContainsKey(players[ActivePlayerID - 1].LatestMarkLoc.Item1 + HyperParam.boardSide * nextY) ||
-                    gameBoard[players[ActivePlayerID - 1].LatestMarkLoc.Item1 + HyperParam.boardSide * nextY] != ActivePlayerID)
+                if (!gameBoard.ContainsKey(players[activePlayerID - 1].LatestMarkLoc.Item1 + HyperParam.boardSide * nextY) ||
+                    gameBoard[players[activePlayerID - 1].LatestMarkLoc.Item1 + HyperParam.boardSide * nextY] != activePlayerID)
                 {
                     break;
                 }
@@ -271,25 +311,25 @@ namespace Gomoku
             }
             if (maxSymbolLength == 5)
             {
-                Utilities.EndGameMessage("Player " + ActivePlayerID + " won!");
+                Utilities.EndGameMessage("Player " + activePlayerID + " won!");
                 return true;
             }
             for (int y = 1; y <= 4; ++y)
             {
-                var nextY = players[ActivePlayerID - 1].LatestMarkLoc.Item2 + y;
+                var nextY = players[activePlayerID - 1].LatestMarkLoc.Item2 + y;
                 if (nextY > HyperParam.boardSide)
                 {
                     break;
                 }
-                if (!gameBoard.ContainsKey(players[ActivePlayerID - 1].LatestMarkLoc.Item1 + HyperParam.boardSide * nextY) ||
-                    gameBoard[players[ActivePlayerID - 1].LatestMarkLoc.Item1 + HyperParam.boardSide * nextY] != ActivePlayerID)
+                if (!gameBoard.ContainsKey(players[activePlayerID - 1].LatestMarkLoc.Item1 + HyperParam.boardSide * nextY) ||
+                    gameBoard[players[activePlayerID - 1].LatestMarkLoc.Item1 + HyperParam.boardSide * nextY] != activePlayerID)
                 {
                     break;
                 }
                 maxSymbolLength += 1;
                 if (maxSymbolLength == 5)
                 {
-                    Utilities.EndGameMessage("Player " + ActivePlayerID + " won!");
+                    Utilities.EndGameMessage("Player " + activePlayerID + " won!");
                     return true;
                 }
             }
@@ -298,14 +338,14 @@ namespace Gomoku
             maxSymbolLength = 1;
             for (int xy = 1; xy <= 4; ++xy)
             {
-                var nextX = players[ActivePlayerID - 1].LatestMarkLoc.Item1 - xy;
-                var nextY = players[ActivePlayerID - 1].LatestMarkLoc.Item2 - xy;
+                var nextX = players[activePlayerID - 1].LatestMarkLoc.Item1 - xy;
+                var nextY = players[activePlayerID - 1].LatestMarkLoc.Item2 - xy;
                 if (nextX < 0 || nextY < 0)
                 {
                     break;
                 }
                 if (!gameBoard.ContainsKey(nextX + HyperParam.boardSide * nextY) ||
-                    gameBoard[nextX + HyperParam.boardSide * nextY] != ActivePlayerID)
+                    gameBoard[nextX + HyperParam.boardSide * nextY] != activePlayerID)
                 {
                     break;
                 }
@@ -313,26 +353,26 @@ namespace Gomoku
             }
             if (maxSymbolLength == 5)
             {
-                Utilities.EndGameMessage("Player " + ActivePlayerID + " won!");
+                Utilities.EndGameMessage("Player " + activePlayerID + " won!");
                 return true;
             }
             for (int xy = 1; xy <= 4; ++xy)
             {
-                var nextX = players[ActivePlayerID - 1].LatestMarkLoc.Item1 + xy;
-                var nextY = players[ActivePlayerID - 1].LatestMarkLoc.Item2 + xy;
+                var nextX = players[activePlayerID - 1].LatestMarkLoc.Item1 + xy;
+                var nextY = players[activePlayerID - 1].LatestMarkLoc.Item2 + xy;
                 if (nextX > HyperParam.boardSide || nextY > HyperParam.boardSide)
                 {
                     break;
                 }
                 if (!gameBoard.ContainsKey(nextX + HyperParam.boardSide * nextY) ||
-                    gameBoard[nextX + HyperParam.boardSide * nextY] != ActivePlayerID)
+                    gameBoard[nextX + HyperParam.boardSide * nextY] != activePlayerID)
                 {
                     break;
                 }
                 maxSymbolLength += 1;
                 if (maxSymbolLength == 5)
                 {
-                    Utilities.EndGameMessage("Player " + ActivePlayerID + " won!");
+                    Utilities.EndGameMessage("Player " + activePlayerID + " won!");
                     return true;
                 }
             }
@@ -341,14 +381,14 @@ namespace Gomoku
             maxSymbolLength = 1;
             for (int xy = 1; xy <= 4; ++xy)
             {
-                var nextX = players[ActivePlayerID - 1].LatestMarkLoc.Item1 - xy;
-                var nextY = players[ActivePlayerID - 1].LatestMarkLoc.Item2 + xy;
+                var nextX = players[activePlayerID - 1].LatestMarkLoc.Item1 - xy;
+                var nextY = players[activePlayerID - 1].LatestMarkLoc.Item2 + xy;
                 if (nextX < 0 || nextY > HyperParam.boardSide)
                 {
                     break;
                 }
                 if (!gameBoard.ContainsKey(nextX + HyperParam.boardSide * nextY) ||
-                    gameBoard[nextX + HyperParam.boardSide * nextY] != ActivePlayerID)
+                    gameBoard[nextX + HyperParam.boardSide * nextY] != activePlayerID)
                 {
                     break;
                 }
@@ -356,26 +396,26 @@ namespace Gomoku
             }
             if (maxSymbolLength == 5)
             {
-                Utilities.EndGameMessage("Player " + ActivePlayerID + " won!");
+                Utilities.EndGameMessage("Player " + activePlayerID + " won!");
                 return true;
             }
             for (int xy = 1; xy <= 4; ++xy)
             {
-                var nextX = players[ActivePlayerID - 1].LatestMarkLoc.Item1 + xy;
-                var nextY = players[ActivePlayerID - 1].LatestMarkLoc.Item2 - xy;
+                var nextX = players[activePlayerID - 1].LatestMarkLoc.Item1 + xy;
+                var nextY = players[activePlayerID - 1].LatestMarkLoc.Item2 - xy;
                 if (nextX > HyperParam.boardSide || nextY < 0)
                 {
                     break;
                 }
                 if (!gameBoard.ContainsKey(nextX + HyperParam.boardSide * nextY) ||
-                    gameBoard[nextX + HyperParam.boardSide * nextY] != ActivePlayerID)
+                    gameBoard[nextX + HyperParam.boardSide * nextY] != activePlayerID)
                 {
                     break;
                 }
                 maxSymbolLength += 1;
                 if (maxSymbolLength == 5)
                 {
-                    Utilities.EndGameMessage("Player " + ActivePlayerID + " won!");
+                    Utilities.EndGameMessage("Player " + activePlayerID + " won!");
                     return true;
                 }
             }

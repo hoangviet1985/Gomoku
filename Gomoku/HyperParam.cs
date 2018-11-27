@@ -27,6 +27,7 @@
         /// </summary>
         public enum MarkSymbol { Player1 = 1, Player2};
 
-        public static int reasoningDepth = 5;
+        public const int reasoningDepth = 10;
+        public const int searchThreshold = 60;
     }
 }

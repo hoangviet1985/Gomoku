@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Gomoku
 {
@@ -130,15 +131,15 @@ namespace Gomoku
         /// <param name="gameBoardMaxX">max x of marks on game board</param>
         /// <param name="gameBoardMaxY">max y of marks on game board</param>
         /// <returns></returns>
-        public Tuple<int, int> SimpleAIReasoning(
+        public Tuple<int, int> GreedySearchAIReasoning(
             Dictionary<int, int> gameBoard, 
             Tuple<int, int> opponentLatestMark, 
             int myMarkSymbol, 
             int opponentMarkSymbol,
-            int gameBoardMinX,
-            int gameBoardMinY,
-            int gameBoardMaxX,
-            int gameBoardMaxY)
+            ref int gameBoardMinX,
+            ref int gameBoardMinY,
+            ref int gameBoardMaxX,
+            ref int gameBoardMaxY)
         {
             if(gameBoard.Count == 0)
             {
@@ -169,7 +170,7 @@ namespace Gomoku
                 return nextMark;
             }
 
-            nextMark = SimpleAttack(
+            var nextMarkWithScore = GreedySearch(
                 gameBoard,
                 myMarkSymbol,
                 opponentMarkSymbol,
@@ -178,7 +179,7 @@ namespace Gomoku
                 gameBoardMaxX,
                 gameBoardMaxY);
 
-            return nextMark;
+            return new Tuple<int, int>(nextMarkWithScore.Item1, nextMarkWithScore.Item2);
         }
 
         /// <summary>
@@ -649,8 +650,8 @@ namespace Gomoku
         /// <param name="gameBoardMinY">min y of marks on game board</param>
         /// <param name="gameBoardMaxX">max x of marks on game board</param>
         /// <param name="gameBoardMaxY">max y of marks on game board</param>
-        /// <returns>A "best" location to mark on</returns>
-        private Tuple<int, int> SimpleAttack(
+        /// <returns>A "best" location to mark on with its score</returns>
+        private Tuple<int, int, int> GreedySearch(
             Dictionary<int, int> gameBoard, 
             int myMarkSymbol,
             int opponentMarkSymbol,
@@ -681,7 +682,7 @@ namespace Gomoku
             }
 
             int maxScore = 0;
-            Tuple<int, int> nextMark = null;
+            Tuple<int, int, int> nextMark = null;
             for(int i = y1; i <= y2; ++i)
             {
                 for(int j = x1; j <= x2; ++j)
@@ -692,7 +693,7 @@ namespace Gomoku
                         if (maxScore < currentScore)
                         {
                             maxScore = currentScore;
-                            nextMark = new Tuple<int, int>(j, i);
+                            nextMark = new Tuple<int, int, int>(j, i, currentScore);
                         }
                     }
                 }
@@ -932,65 +933,156 @@ namespace Gomoku
 
         #region complex AI resoning
 
-        public Tuple<int, int> ComplexAIReasoning(
+        public Tuple<int, int, int> ComplexAIReasoning(
             Dictionary<int, int> gameBoard,
             Tuple<int, int> opponentLatestMark,
             int myMarkSymbol,
             int opponentMarkSymbol,
-            int gameBoardMinX,
-            int gameBoardMinY,
-            int gameBoardMaxX,
-            int gameBoardMaxY,
-            int depth)
+            ref int gameBoardMinX,
+            ref int gameBoardMinY,
+            ref int gameBoardMaxX,
+            ref int gameBoardMaxY,
+            ref int currentTurn,
+            int depth = HyperParam.reasoningDepth)
         {
             if (gameBoard.Count == 0)
             {
-                return new Tuple<int, int>(HyperParam.boardSide / 2, HyperParam.boardSide / 2);
+                return new Tuple<int, int, int>(HyperParam.boardSide / 2, HyperParam.boardSide / 2, int.MaxValue);
             }
 
             Tuple<int, int> nextMark = CheckInstantWin(gameBoard, LatestMarkLoc, myMarkSymbol);
             if (nextMark != null)
             {
-                return nextMark;
+                return new Tuple<int, int, int>(nextMark.Item1, nextMark.Item2, int.MaxValue);
             }
 
             nextMark = CheckInstantWin(gameBoard, opponentLatestMark, opponentMarkSymbol);
             if (nextMark != null)
             {
-                return nextMark;
+                return new Tuple<int, int, int>(nextMark.Item1, nextMark.Item2, int.MaxValue);
             }
 
             nextMark = CheckSemiInstantWin(gameBoard, LatestMarkLoc, myMarkSymbol);
             if (nextMark != null)
             {
-                return nextMark;
+                return new Tuple<int, int, int>(nextMark.Item1, nextMark.Item2, int.MaxValue);
             }
 
             nextMark = CheckSemiInstantWin(gameBoard, opponentLatestMark, opponentMarkSymbol);
             if (nextMark != null)
             {
-                return nextMark;
+                return new Tuple<int, int, int>(nextMark.Item1, nextMark.Item2, int.MaxValue);
             }
 
-            nextMark = PrunningAttack(
-                gameBoard,
-                myMarkSymbol,
-                opponentMarkSymbol,
-                gameBoardMinX,
-                gameBoardMinY,
-                gameBoardMaxX,
-                gameBoardMaxY,
-                depth);
+            ///////////////////////
+            var x1 = gameBoardMinX;
+            while (x1 > 0 && x1 > gameBoardMinX - 2)
+            {
+                x1 -= 1;
+            }
+            var y1 = gameBoardMinY;
+            while (y1 > 0 && y1 > gameBoardMinY - 2)
+            {
+                y1 -= 1;
+            }
+            var x2 = gameBoardMaxX;
+            while (x2 < HyperParam.boardSide && x2 < gameBoardMaxX + 2)
+            {
+                x2 += 1;
+            }
+            var y2 = gameBoardMaxY;
+            while (y2 < HyperParam.boardSide && y2 < gameBoardMaxY + 2)
+            {
+                y2 += 1;
+            }
 
-            return nextMark;
+            List<Tuple<int, int, int>> nextMarks = new List<Tuple<int, int, int>>();
+            for (int i = y1; i <= y2; ++i)
+            {
+                for (int j = x1; j <= x2; ++j)
+                {
+                    if (!gameBoard.ContainsKey(Utilities.CoordinateToInteger(j, i)))
+                    {
+                        int currentScore = ComputeScoreForOneMark(gameBoard, j, i, myMarkSymbol, opponentMarkSymbol);
+                        if (currentScore >= HyperParam.searchThreshold)
+                        {
+                            nextMarks.Add(new Tuple<int, int, int>(j, i, currentScore));
+                        }
+                    }
+                }
+            }
+
+            if(nextMarks.Capacity == 0)
+            {
+                return GreedySearch(
+                    gameBoard,
+                    myMarkSymbol,
+                    opponentMarkSymbol,
+                    gameBoardMinX,
+                    gameBoardMinY,
+                    gameBoardMaxX,
+                    gameBoardMaxY);
+            }
+            if(depth == 0)
+            {
+                return nextMarks.OrderByDescending(nMark => nMark.Item3).First();
+            }
+            int currentGameBoardMinX = gameBoardMinX;
+            int currentGameBoardMinY = gameBoardMinX;
+            int currentGameBoardMaxX = gameBoardMaxX;
+            int currentGameBoardMaxY = gameBoardMaxY;
+            int currentPlayer = currentTurn;
+            var newNextMarks = new List<Tuple<int, int, int>>();
+            foreach (var nMark in nextMarks)
+            {
+                AIMarksOnGameBoard(
+                    gameBoard,
+                    nMark.Item1,
+                    nMark.Item2,
+                    myMarkSymbol,
+                    ref gameBoardMinX,
+                    ref gameBoardMinY,
+                    ref gameBoardMaxX,
+                    ref gameBoardMaxY);
+                var opponentMark = GreedySearchAIReasoning(
+                    gameBoard,
+                    opponentLatestMark,
+                    myMarkSymbol,
+                    opponentMarkSymbol,
+                    ref gameBoardMinX,
+                    ref gameBoardMinY,
+                    ref gameBoardMaxX,
+                    ref gameBoardMaxY);
+                AIMarksOnGameBoard(
+                    gameBoard,
+                    opponentMark.Item1,
+                    opponentMark.Item2,
+                    myMarkSymbol,
+                    ref gameBoardMinX,
+                    ref gameBoardMinY,
+                    ref gameBoardMaxX,
+                    ref gameBoardMaxY);
+                newNextMarks.Add(ComplexAIReasoning(
+                    gameBoard, 
+                    opponentLatestMark, 
+                    myMarkSymbol, 
+                    opponentMarkSymbol,
+                    ref gameBoardMinX, 
+                    ref gameBoardMinY, 
+                    ref gameBoardMaxX, 
+                    ref gameBoardMaxY,
+                    ref currentTurn,
+                    depth - 1));
+                gameBoardMinX = currentGameBoardMinX;
+                gameBoardMinY = currentGameBoardMinY;
+                gameBoardMaxX = currentGameBoardMaxX;
+                gameBoardMaxY = currentGameBoardMaxY;
+                gameBoard.Remove(opponentMark.Item2 * HyperParam.boardSide + opponentMark.Item1);
+                gameBoard.Remove(nMark.Item2 * HyperParam.boardSide + nMark.Item1);
+                currentTurn = currentPlayer;
+            }
+            return newNextMarks.OrderByDescending(nMark => nMark.Item3).First();
         }
-
-        private Tuple<int, int> PrunningAttack(Dictionary<int, int> gameBoard, int myMarkSymbol, int opponentMarkSymbol, int gameBoardMinX, int gameBoardMinY, int gameBoardMaxX, int gameBoardMaxY, int depth)
-        {
-            throw new NotImplementedException();
-        }
-
-
 
         #endregion
     }
