@@ -208,7 +208,7 @@ namespace Gomoku
                 }
                 else // GameMode == 2
                 {
-                    var nextMark = players[1].ComplexAIReasoning(
+                    var nextMark = players[1].PrunningAIReasoning(
                         gameBoard,
                         players[0].LatestMarkLoc,
                         (int)HyperParam.MarkSymbol.Player2,

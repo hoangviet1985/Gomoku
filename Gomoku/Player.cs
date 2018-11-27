@@ -179,7 +179,10 @@ namespace Gomoku
                 gameBoardMaxX,
                 gameBoardMaxY);
 
-            return new Tuple<int, int>(nextMarkWithScore.Item1, nextMarkWithScore.Item2);
+            if (nextMarkWithScore != null)
+                return new Tuple<int, int>(nextMarkWithScore.Item1, nextMarkWithScore.Item2);
+            else
+                return null;
         }
 
         /// <summary>
@@ -933,7 +936,7 @@ namespace Gomoku
 
         #region complex AI resoning
 
-        public Tuple<int, int, int> ComplexAIReasoning(
+        public Tuple<int, int, int> PrunningAIReasoning(
             Dictionary<int, int> gameBoard,
             Tuple<int, int> opponentLatestMark,
             int myMarkSymbol,
@@ -945,6 +948,7 @@ namespace Gomoku
             ref int currentTurn,
             int depth = HyperParam.reasoningDepth)
         {
+            //Checks instance win for both players
             if (gameBoard.Count == 0)
             {
                 return new Tuple<int, int, int>(HyperParam.boardSide / 2, HyperParam.boardSide / 2, int.MaxValue);
@@ -959,7 +963,7 @@ namespace Gomoku
             nextMark = CheckInstantWin(gameBoard, opponentLatestMark, opponentMarkSymbol);
             if (nextMark != null)
             {
-                return new Tuple<int, int, int>(nextMark.Item1, nextMark.Item2, int.MaxValue);
+                return new Tuple<int, int, int>(nextMark.Item1, nextMark.Item2, 0);
             }
 
             nextMark = CheckSemiInstantWin(gameBoard, LatestMarkLoc, myMarkSymbol);
@@ -971,10 +975,10 @@ namespace Gomoku
             nextMark = CheckSemiInstantWin(gameBoard, opponentLatestMark, opponentMarkSymbol);
             if (nextMark != null)
             {
-                return new Tuple<int, int, int>(nextMark.Item1, nextMark.Item2, int.MaxValue);
+                return new Tuple<int, int, int>(nextMark.Item1, nextMark.Item2, 0);
             }
 
-            ///////////////////////
+            //Finds the best mark for current player if there is no instance win
             var x1 = gameBoardMinX;
             while (x1 > 0 && x1 > gameBoardMinX - 2)
             {
@@ -996,6 +1000,7 @@ namespace Gomoku
                 y2 += 1;
             }
 
+            //Pruns branches with low scores
             List<Tuple<int, int, int>> nextMarks = new List<Tuple<int, int, int>>();
             for (int i = y1; i <= y2; ++i)
             {
@@ -1012,6 +1017,7 @@ namespace Gomoku
                 }
             }
 
+            //If there is a leaf
             if(nextMarks.Capacity == 0)
             {
                 return GreedySearch(
@@ -1023,18 +1029,22 @@ namespace Gomoku
                     gameBoardMaxX,
                     gameBoardMaxY);
             }
+            //Or limited depth of search reached
             if(depth == 0)
             {
                 return nextMarks.OrderByDescending(nMark => nMark.Item3).First();
             }
+
+            //Else extending branches
             int currentGameBoardMinX = gameBoardMinX;
-            int currentGameBoardMinY = gameBoardMinX;
+            int currentGameBoardMinY = gameBoardMinY;
             int currentGameBoardMaxX = gameBoardMaxX;
             int currentGameBoardMaxY = gameBoardMaxY;
             int currentPlayer = currentTurn;
             var newNextMarks = new List<Tuple<int, int, int>>();
             foreach (var nMark in nextMarks)
             {
+                //Assumes that the current player mark on this location
                 AIMarksOnGameBoard(
                     gameBoard,
                     nMark.Item1,
@@ -1044,6 +1054,8 @@ namespace Gomoku
                     ref gameBoardMinY,
                     ref gameBoardMaxX,
                     ref gameBoardMaxY);
+                //Consider the opponent playing with greedy search strategy
+                //to find the opponent's mark's location
                 var opponentMark = GreedySearchAIReasoning(
                     gameBoard,
                     opponentLatestMark,
@@ -1053,26 +1065,33 @@ namespace Gomoku
                     ref gameBoardMinY,
                     ref gameBoardMaxX,
                     ref gameBoardMaxY);
+                //Assume the opponent would mark on this location
                 AIMarksOnGameBoard(
                     gameBoard,
                     opponentMark.Item1,
                     opponentMark.Item2,
-                    myMarkSymbol,
+                    opponentMarkSymbol,
                     ref gameBoardMinX,
                     ref gameBoardMinY,
                     ref gameBoardMaxX,
                     ref gameBoardMaxY);
-                newNextMarks.Add(ComplexAIReasoning(
-                    gameBoard, 
-                    opponentLatestMark, 
-                    myMarkSymbol, 
+                //Go deeper to find a series of marks of current player and his opponents
+                var tempMark = PrunningAIReasoning(
+                    gameBoard,
+                    opponentLatestMark,
+                    myMarkSymbol,
                     opponentMarkSymbol,
-                    ref gameBoardMinX, 
-                    ref gameBoardMinY, 
-                    ref gameBoardMaxX, 
+                    ref gameBoardMinX,
+                    ref gameBoardMinY,
+                    ref gameBoardMaxX,
                     ref gameBoardMaxY,
                     ref currentTurn,
-                    depth - 1));
+                    depth - 1);
+                //return each mark's location of current player with the mark's score
+                //add it to a list to find the best mark later
+                newNextMarks.Add(new Tuple<int, int, int>(nMark.Item1, nMark.Item2, tempMark.Item3));
+                //recover game's parameters
+                //because all things happening here are just assumption
                 gameBoardMinX = currentGameBoardMinX;
                 gameBoardMinY = currentGameBoardMinY;
                 gameBoardMaxX = currentGameBoardMaxX;
@@ -1081,6 +1100,7 @@ namespace Gomoku
                 gameBoard.Remove(nMark.Item2 * HyperParam.boardSide + nMark.Item1);
                 currentTurn = currentPlayer;
             }
+            //Returns best mark in the list
             return newNextMarks.OrderByDescending(nMark => nMark.Item3).First();
         }
 
