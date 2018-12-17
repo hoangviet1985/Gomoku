@@ -6,7 +6,8 @@ using System.Windows.Controls;
 namespace Gomoku
 {
     /// <summary>
-    /// a game
+    /// Description: This class represents a game
+    /// Author: Viet Dinh
     /// </summary>
     class Game
     {
@@ -58,16 +59,16 @@ namespace Gomoku
             activePlayerID = (int)HyperParam.PlayerID.Player1;
             this.graphicalBoard = graphicalBoard;
             this.currentPlayerCv = currentPlayerCv;
-            if(GameMode == 1 || GameMode == 2)
+            if(GameMode == 1 || GameMode == 2 || gameMode == 3)
             {
-                RunGameMode12();
+                RunGameMode123();
             }
         }
 
         /// <summary>
         /// Threading function for AI
         /// </summary>
-        private void RunGameMode12()
+        private void RunGameMode123()
         {
             Task.Run(async () =>
             {
@@ -131,17 +132,18 @@ namespace Gomoku
         public void AIActing()
         {
             if (activePlayerID == (int)HyperParam.PlayerID.Player1 &&
-                GameMode == 2)
+               GameMode == 2)
             {
                 var nextMark = players[0].GreedySearchAIReasoning(
-                    gameBoard, 
-                    players[1].LatestMarkLoc, 
-                    (int)HyperParam.MarkSymbol.Player1, 
+                    gameBoard,
+                    players[1].LatestMarkLoc,
+                    (int)HyperParam.MarkSymbol.Player1,
                     (int)HyperParam.MarkSymbol.Player2,
                     ref minX,
                     ref minY,
                     ref maxX,
                     ref maxY);
+                
                 players[0].AIMarksOnGameBoard(
                     gameBoard, 
                     nextMark.Item1,
@@ -168,7 +170,7 @@ namespace Gomoku
                 activePlayerID = (int)HyperParam.PlayerID.Player2;
             }
             else if (activePlayerID == (int)HyperParam.PlayerID.Player2 && 
-                (GameMode == 1 || GameMode == 2))
+                (GameMode == 1 || GameMode == 2 || GameMode == 3))
             {
                 if (GameMode == 1)
                 {
@@ -206,9 +208,9 @@ namespace Gomoku
                     CheckGameEnd();
                     activePlayerID = (int)HyperParam.PlayerID.Player1;
                 }
-                else // GameMode == 2
+                else // GameMode == 2 or GameMode == 3
                 {
-                    var nextMark = players[1].PrunningAIReasoning(
+                    var nextMark = players[1].ForwardPrunningAIReasoning(
                         gameBoard,
                         players[0].LatestMarkLoc,
                         (int)HyperParam.MarkSymbol.Player2,

@@ -4,7 +4,8 @@ using System.Windows.Input;
 namespace Gomoku
 {
     /// <summary>
-    /// Interaction logic for MainWindow.xaml
+    /// Description: This class represent a GUI and interaction logic for MainWindow.xaml
+    /// Author: Viet Dinh
     /// </summary>
     public partial class MainWindow : Window
     {
@@ -13,26 +14,26 @@ namespace Gomoku
         public MainWindow()
         {
             InitializeComponent();
-            MessageBoxManager.Cancel = "P vs P";
-            MessageBoxManager.Yes = "P vs AI";
-            MessageBoxManager.No = "AI vs AI";
+            MessageBoxManager.Cancel = "P vs. cAI";
+            MessageBoxManager.Yes = "P vs. sAI";
+            MessageBoxManager.No = "sAI vs. cAI";
             MessageBoxManager.Register();
             var result = MessageBox.Show("Please choose game mode!", "Gomoku", MessageBoxButton.YesNoCancel);
             int chosenGameMode = 0;
             if (result == MessageBoxResult.Yes)
             {
                 chosenGameMode = 1;
-                gameModeLb.Content = "Person vs AI";
+                gameModeLb.Content = "Person vs. simple AI";
             }
             else if (result == MessageBoxResult.No)
             {
                 chosenGameMode = 2;
-                gameModeLb.Content = "AI vs AI";
+                gameModeLb.Content = "simple AI vs. complex AI";
             }
             else if (result == MessageBoxResult.Cancel)
             {
-                chosenGameMode = 0;
-                gameModeLb.Content = "Person vs Person";
+                chosenGameMode = 3;
+                gameModeLb.Content = "Person vs. complex AI";
             }
             game = new Game(chosenGameMode, gameBoard, currentPlayerCv);
 
@@ -71,7 +72,8 @@ namespace Gomoku
                     }
                 }
             }
-            else if(game.GameMode == 1 && game.activePlayerID == (int)HyperParam.PlayerID.Player1)
+            else if((game.GameMode == 1 || game.GameMode == 3) && 
+                game.activePlayerID == (int)HyperParam.PlayerID.Player1)
             {
                 var gameBoardPoint = Utilities.GetGameBoardLocationInPixelsFromMousePosition(Mouse.GetPosition(gameBoard));
                 var playerActResult = game.HumanActing((gameBoardPoint.Item1 + 1) / HyperParam.cellSide, (gameBoardPoint.Item2 + 1) / HyperParam.cellSide);

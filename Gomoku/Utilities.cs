@@ -4,7 +4,8 @@ using System.Windows;
 namespace Gomoku
 {
     /// <summary>
-    /// utility static functions
+    /// Description: This class contains some utility static functions
+    /// Author: Viet Dinh
     /// </summary>
     class Utilities
     {

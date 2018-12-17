@@ -1,7 +1,8 @@
 ﻿namespace Gomoku
 {
     /// <summary>
-    /// common parameters
+    /// Description: This class contains some common hyper-parameters of the game
+    /// Author: Viet Dinh, Jooseppi Luna, Iris Wang
     /// </summary>
     class HyperParam
     {
@@ -27,7 +28,7 @@
         /// </summary>
         public enum MarkSymbol { Player1 = 1, Player2};
 
-        public const int reasoningDepth = 3;
+        public const int reasoningDepth = 4;
         public const int searchThreshold = 150;
     }
 }

@@ -4,6 +4,10 @@ using System.Windows.Shapes;
 
 namespace Gomoku
 {
+    /// <summary>
+    /// Description: This class contains some functions to draw on GUI
+    /// Author: Viet Dinh
+    /// </summary>
     class Draw
     {
         public static void DrawO(int x, int y, int width, int height, Canvas cv)

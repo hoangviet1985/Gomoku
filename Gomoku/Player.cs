@@ -5,7 +5,8 @@ using System.Linq;
 namespace Gomoku
 {
     /// <summary>
-    /// a player in game
+    /// Description: This class represent a player in game
+    /// Author: Viet Dinh, Jooseppi Luna, Iris Wang
     /// </summary>
     class Player
     {
@@ -115,7 +116,7 @@ namespace Gomoku
             }
         }
 
-        #region simple AI reasoning
+        #region Greedy Search AI
 
         /// <summary>
         /// simple AI agent computes location for its next mark
@@ -934,9 +935,23 @@ namespace Gomoku
 
         #endregion
 
-        #region complex AI resoning
+        #region Forward-Prunning Greedy Limited-Depth Search AI
 
-        public Tuple<int, int, int> PrunningAIReasoning(
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="gameBoard"></param>
+        /// <param name="opponentLatestMark"></param>
+        /// <param name="myMarkSymbol"></param>
+        /// <param name="opponentMarkSymbol"></param>
+        /// <param name="gameBoardMinX"></param>
+        /// <param name="gameBoardMinY"></param>
+        /// <param name="gameBoardMaxX"></param>
+        /// <param name="gameBoardMaxY"></param>
+        /// <param name="currentTurn"></param>
+        /// <param name="depth"></param>
+        /// <returns></returns>
+        public Tuple<int, int, int> ForwardPrunningAIReasoning(
             Dictionary<int, int> gameBoard,
             Tuple<int, int> opponentLatestMark,
             int myMarkSymbol,
@@ -1000,7 +1015,7 @@ namespace Gomoku
                 y2 += 1;
             }
 
-            //Pruns branches with low scores
+            //Forward prunning - Pruns branches with low scores
             List<Tuple<int, int, int>> nextMarks = new List<Tuple<int, int, int>>();
             for (int i = y1; i <= y2; ++i)
             {
@@ -1076,7 +1091,7 @@ namespace Gomoku
                     ref gameBoardMaxX,
                     ref gameBoardMaxY);
                 //Go deeper to find a series of marks of current player and his opponents
-                var tempMark = PrunningAIReasoning(
+                var tempMark = ForwardPrunningAIReasoning(
                     gameBoard,
                     opponentLatestMark,
                     myMarkSymbol,
